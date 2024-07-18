@@ -6,3 +6,4 @@ langgraph
 ipython
 typing-extensions
 httpx
+beautifulsoup
