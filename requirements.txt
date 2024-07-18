@@ -1,0 +1,8 @@
+langchain
+langchain-core
+langchain-community
+duckduckgo-search
+langgraph
+ipython
+typing-extensions
+httpx
