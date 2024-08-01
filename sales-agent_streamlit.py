@@ -1,13 +1,18 @@
+from dotenv import load_dotenv
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import time
 import logging
+import os
 from openai import OpenAI
 
+# Load environment variables from .env file
+load_dotenv()
+
 # Set OpenAI and SERP API keys
-openai_api_key = 'sk-proj-lXv4D7Ep2mVnjng7i58sT3BlbkFJDm0BMQKrCn2mv56VLs1S'
-serp_api_key = 'c5447badf6cccf8421758fa2969175d1c32f08368b47fa4a62cd340d6525d40e'
+openai_api_key = os.getenv('openai_api_key')
+serp_api_key = os.getenv('serp_api_key')
 
 # Initialize the OpenAI client with API key
 client = OpenAI(api_key=openai_api_key)
