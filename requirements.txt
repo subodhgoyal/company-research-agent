@@ -7,4 +7,3 @@ ipython
 typing-extensions
 httpx
 beautifulsoup
-os
