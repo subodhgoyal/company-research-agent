@@ -104,7 +104,7 @@ def summarize_search_results(search_results):
 
 # Define the Streamlit UI
 def main():
-    st.title("AI Sales Agent")
+    st.title("AI Company Research Agent")
     company_name = st.text_input("Enter Company Name")
     
     if st.button("Search"):
