@@ -51,7 +51,8 @@ def scrape_targeted_content(url):
 # Define Search function using SERP API
 def search_company(company_name):
     search_url = "https://serpapi.com/search"
-    query = f"{company_name} company profile OR overview OR about"
+    query = f"{company_name} company overview OR about OR wiki OR products and services"
+
     params = {
         "engine": "google",
         "q": query,
@@ -62,7 +63,7 @@ def search_company(company_name):
     if response.status_code == 200:
         search_results = response.json()
         results = []
-        for result in search_results.get('organic_results', [])[:3]:  # Limit to top 3 results
+        for result in search_results.get('organic_results', [])[:4]:  # Limit to top 4 results
             results.append({
                 'url': result.get('link'),
                 'text': result.get('snippet', '')
@@ -83,11 +84,11 @@ def summarize_search_results(search_results):
         time.sleep(1)  # Respectful delay between requests
     
     combined_text = ' '.join(all_texts)
-    max_length = 500  # Maximum token limit for GPT-4 is around 4096 tokens
+    max_length = 1000  # Maximum token limit for GPT-4 is around 4096 tokens
     if len(combined_text) > max_length:
         combined_text = combined_text[:max_length]
     
-    #st.write(f"Combined text for summarization:\n{combined_text[:500]}...")  # Print only the first 500 characters for brevity
+    #st.write(f"Combined text for summarization:\n{combined_text[:1000]}...")  # Print only the first 1000 characters for brevity
     
     response = client.chat.completions.create(
         messages=[
