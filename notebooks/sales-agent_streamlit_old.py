@@ -5,7 +5,8 @@ from bs4 import BeautifulSoup
 import time
 import logging
 import os
-from openai import OpenAI
+#from openai import OpenAI
+import openai
 
 # Load environment variables from .env file
 load_dotenv()
@@ -14,8 +15,13 @@ load_dotenv()
 openai_api_key = os.getenv('openai_api_key')
 serp_api_key = os.getenv('serp_api_key')
 
+# Ensure the API key is loaded correctly
+if openai_api_key is None:
+    raise ValueError("OpenAI API key not found. Please set the 'openai_api_key' in the .env file.")
+
 # Initialize the OpenAI client with API key
-client = OpenAI(api_key=openai_api_key)
+#client = OpenAI(api_key=openai_api_key)
+openai.api_key = openai_api_key
 
 # Set up logging
 logging.basicConfig(
