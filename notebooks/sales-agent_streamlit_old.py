@@ -1,26 +1,26 @@
-import os
-import time
-import logging
+from dotenv import load_dotenv
+import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
+import time
+import logging
+import os
 from openai import OpenAI
-import streamlit as st
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
 
 # Set OpenAI and SERP API keys
-openai_api_key = os.getenv('OPENAI_API_KEY')
-serp_api_key = os.getenv('SERP_API_KEY')
+openai_api_key = os.getenv('openai_api_key')
+serp_api_key = os.getenv('serp_api_key')
 
 # Initialize the OpenAI client with API key
 client = OpenAI(api_key=openai_api_key)
 
 # Set up logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    level=logging.INFO,  # Capture INFO level and above
+    format='%(asctime)s - %(levelname)s - %(message)s'  # Simple format with timestamp, log level, and message
 )
 
 # Define scraping function to extract content for a given URL
@@ -30,9 +30,10 @@ def scrape_targeted_content(url):
     }
     try:
         response = requests.get(url, headers=headers)
-        response.raise_for_status()
+        response.raise_for_status()  # Check for HTTP errors
         soup = BeautifulSoup(response.text, 'html.parser')
 
+        # Extract basic content
         title = soup.title.string if soup.title else ''
         meta_description = soup.find('meta', attrs={'name': 'description'})
         meta_description = meta_description['content'] if meta_description else ''
@@ -55,14 +56,14 @@ def search_company(company_name):
     params = {
         "engine": "google",
         "q": query,
-        "api_key": serp_api_key
+        "api_key": serp_api_key  # Use the SERP API key here
     }
     response = requests.get(search_url, params=params)
     
     if response.status_code == 200:
         search_results = response.json()
         results = []
-        for result in search_results.get('organic_results', [])[:4]:
+        for result in search_results.get('organic_results', [])[:4]:  # Limit to top 4 results
             results.append({
                 'url': result.get('link'),
                 'text': result.get('snippet', '')
@@ -72,51 +73,23 @@ def search_company(company_name):
         logging.error(f"Request failed with status code: {response.status_code}")
         return None
 
-# Define Search function for latest news using SERP API
-def search_latest_news(company_name):
-    search_url = "https://serpapi.com/search"
-    query = f"{company_name} latest news"
-
-    params = {
-        "engine": "google",
-        "q": query,
-        "tbm": "nws",
-        "api_key": serp_api_key
-    }
-    response = requests.get(search_url, params=params)
-    
-    if response.status_code == 200:
-        search_results = response.json()
-        news_results = []
-        for result in search_results.get('news_results', [])[:5]:
-            news_results.append({
-                'url': result.get('link'),
-                'title': result.get('title'),
-                'snippet': result.get('snippet')
-            })
-        return news_results
-    else:
-        logging.error(f"Request failed with status code: {response.status_code}")
-        return None
-
 # Define a function to summarize search results' content extracted from scraping using Open AI
 def summarize_search_results(search_results):
     all_texts = []
-    progress_bar = st.progress(0)
-    total_results = len(search_results)
-    
-    for i, result in enumerate(search_results):
+    #progress_bar = st.progress(0)
+    for result in search_results:
         content = scrape_targeted_content(result['url'])
         text = content.get("body_text", "")
         if text:
             all_texts.append(text)
-        time.sleep(1)
-        progress_bar.progress((i + 1) / total_results)
+        time.sleep(1)  # Respectful delay between requests
     
     combined_text = ' '.join(all_texts)
-    max_length = 1000
+    max_length = 1000  # Maximum token limit for GPT-4 is around 4096 tokens
     if len(combined_text) > max_length:
         combined_text = combined_text[:max_length]
+    
+    #st.write(f"Combined text for summarization:\n{combined_text[:1000]}...")  # Print only the first 1000 characters for brevity
     
     response = client.chat.completions.create(
         messages=[
@@ -148,35 +121,23 @@ def main():
             if search_results:
                 for result in search_results:
                     content = scrape_targeted_content(result['url'])
-
+                    #st.write(f"URL: {result['url']}")
+                    #st.write(f"Title: {content['title']}")
+                    #st.write(f"Meta Description: {content['meta_description']}")
+                    #st.write(f"Body Text: {content['body_text'][:200]}...")  # Display only the first 200 characters of body text
+                #progress_text.text("Summarizing search results...")
                 with st.spinner('Summarizing search results...'):
                     summary = summarize_search_results(search_results)
                 
+                # Clear the status texts
                 status_text.empty()
                 progress_text.empty()
                 
                 results_output = "\n\n".join([f"URL: {result['url']}\nText: {result['text']}" for result in search_results])
                 st.write(f"Summary for {company_name}:")
                 st.write(summary)
-                #st.write("URLs identified:")
-                #st.write(results_output)
-                
-                # Fetch and display latest news
-                status_text.text(f"Fetching latest news for {company_name}...")
-                with st.spinner('Fetching latest news...'):
-                    news_results = search_latest_news(company_name)
-                
-                if news_results:
-                    st.write(f"Latest news for {company_name}:")
-                    for news in news_results:
-                        st.write(f"{news['url']}")
-                        st.write(f"Title: {news['title']}")
-                        st.write(f"Snippet: {news['snippet']}")
-                        
-                else:
-                    st.write(f"No latest news found for {company_name}")
-                
-                status_text.empty()
+                st.write("URLs identified:")
+                st.write(results_output)
             else:
                 status_text.empty()
                 st.write(f"No results found for {company_name}")
