@@ -76,6 +76,7 @@ def search_company(company_name):
 # Define a function to summarize search results' content extracted from scraping using Open AI
 def summarize_search_results(search_results):
     all_texts = []
+    #progress_bar = st.progress(0)
     for result in search_results:
         content = scrape_targeted_content(result['url'])
         text = content.get("body_text", "")
@@ -110,8 +111,12 @@ def main():
     
     if st.button("Search"):
         if company_name:
-            st.write(f"Searching information for {company_name}...")
-            search_results = search_company(company_name)
+            status_text = st.empty()
+            progress_text = st.empty()
+
+            status_text.text(f"Searching information for {company_name}...")
+            with st.spinner('Fetching search results...'):
+                search_results = search_company(company_name)
             
             if search_results:
                 for result in search_results:
@@ -120,14 +125,21 @@ def main():
                     #st.write(f"Title: {content['title']}")
                     #st.write(f"Meta Description: {content['meta_description']}")
                     #st.write(f"Body Text: {content['body_text'][:200]}...")  # Display only the first 200 characters of body text
+                #progress_text.text("Summarizing search results...")
+                with st.spinner('Summarizing search results...'):
+                    summary = summarize_search_results(search_results)
                 
-                summary = summarize_search_results(search_results)
+                # Clear the status texts
+                status_text.empty()
+                progress_text.empty()
+                
                 results_output = "\n\n".join([f"URL: {result['url']}\nText: {result['text']}" for result in search_results])
                 st.write(f"Summary for {company_name}:")
                 st.write(summary)
                 st.write("URLs identified:")
                 st.write(results_output)
             else:
+                status_text.empty()
                 st.write(f"No results found for {company_name}")
         else:
             st.write("Please enter a company name.")
