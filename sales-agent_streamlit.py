@@ -87,7 +87,7 @@ def summarize_search_results(search_results):
     if len(combined_text) > max_length:
         combined_text = combined_text[:max_length]
     
-    st.write(f"Combined text for summarization:\n{combined_text[:500]}...")  # Print only the first 500 characters for brevity
+    #st.write(f"Combined text for summarization:\n{combined_text[:500]}...")  # Print only the first 500 characters for brevity
     
     response = client.chat.completions.create(
         messages=[
