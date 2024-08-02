@@ -8,3 +8,4 @@ typing-extensions
 httpx
 beautifulsoup4
 python-dotenv
+openai
